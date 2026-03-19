@@ -16,4 +16,5 @@ export interface User {
   updatedAt?: string;
   /* Optional System Fields */
   createdAt?: string;
+  balance: 0
 }

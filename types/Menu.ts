@@ -9,10 +9,4 @@ export interface MenuItem {
   id: string;
   name: string;
   price: number;
-  description?: string;
-  imageUrl?: string;
-  isAvailable: boolean;
-  isVeg?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
 }

@@ -22,7 +22,7 @@ export default function LoginPage() {
       if(user.role="CHEF"){
           router.push("/u/orders");
         }else if(user.role==="ADMIN"){
-          router.push("/u/orders");
+          router.push("/u/");
         }
       
     } catch (err: any) {

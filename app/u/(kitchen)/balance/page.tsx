@@ -1,18 +1,28 @@
 "use client"
 
-import { useState } from "react"
-
+import { getUser } from "@/firebase/Users"
+import { useEffect, useState } from "react"
+import { userStore } from "@/store/UserInfoStore"
+import { getPaymentInfo, savePaymentInfo } from "@/firebase/PaymentInfo"
+import { PaymentInfo } from "@/types/PaymentInfo"
 export default function BankBalancePage() {
-  const [balance, setBalance] = useState(350)
-
+  const [balance, setBalance] = useState(0)
+  const {user} = userStore();
   const [bankName, setBankName] = useState("")
   const [accountNumber, setAccountNumber] = useState("")
   const [ifsc, setIfsc] = useState("")
   const [upi, setUpi] = useState("")
   const [message, setMessage] = useState("")
-
-  const handleSaveDetails = () => {
-    setMessage("Payment details updated successfully")
+  const [editable,setEditable] = useState(false);
+  const handleSaveDetails = async () => {
+    try{
+      await savePaymentInfo({upiId: upi,ifscCode: ifsc,accountNumber,bankName});
+      setMessage("Payment details updated successfully");
+    }catch(error: any){
+      setMessage(error.message || "Error Occured!");
+    }finally{
+      setEditable(false);
+    }
   }
 
   const handleWithdraw = () => {
@@ -24,7 +34,25 @@ export default function BankBalancePage() {
     setMessage(`Withdrawal request of ₹${balance} sent to admin`)
     setBalance(0)
   }
-
+  useEffect(()=>{
+    const fetchData = async () => {
+      const data = await getUser(user!.id) as any;
+      setBalance(data.balance);
+    };
+    if(user){
+      fetchData();
+    }
+  },[user]);
+  useEffect(()=>{
+    const fetchData = async () => {
+      const paymentInfo = await getPaymentInfo() as PaymentInfo;
+      setBankName(paymentInfo.bankName || "");
+      setIfsc(paymentInfo.ifscCode || "");
+      setUpi(paymentInfo.upiId || "");
+      setAccountNumber(paymentInfo.accountNumber || "");
+    };
+    fetchData();
+  },[]);
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-black px-6 py-16">
       <div className="max-w-4xl mx-auto">
@@ -61,7 +89,7 @@ export default function BankBalancePage() {
             Payment Details
           </h2>
 
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid text-black! md:grid-cols-2 gap-6">
 
             {/* BANK NAME */}
             <div>
@@ -70,6 +98,7 @@ export default function BankBalancePage() {
               </label>
               <input
                 value={bankName}
+                disabled={editable===false}
                 onChange={(e) => setBankName(e.target.value)}
                 placeholder="State Bank of India"
                 className="w-full px-4 py-3 rounded-xl border border-gray-300
@@ -83,6 +112,7 @@ export default function BankBalancePage() {
                 Account Number
               </label>
               <input
+                disabled={editable===false}
                 value={accountNumber}
                 onChange={(e) => setAccountNumber(e.target.value)}
                 placeholder="XXXXXXXXXXXX"
@@ -97,6 +127,7 @@ export default function BankBalancePage() {
                 IFSC Code
               </label>
               <input
+                disabled={editable===false}
                 value={ifsc}
                 onChange={(e) => setIfsc(e.target.value)}
                 placeholder="SBIN0001234"
@@ -112,6 +143,7 @@ export default function BankBalancePage() {
               </label>
               <input
                 value={upi}
+                disabled={editable===false}
                 onChange={(e) => setUpi(e.target.value)}
                 placeholder="chef@upi"
                 className="w-full px-4 py-3 rounded-xl border border-gray-300
@@ -123,10 +155,10 @@ export default function BankBalancePage() {
           {/* ACTIONS */}
           <div className="mt-8 flex gap-4">
             <button
-              onClick={handleSaveDetails}
+              onClick={editable ? handleSaveDetails : ()=>{setEditable(true)}}
               className="px-6 py-3 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition"
             >
-              Save Details
+              {editable ? "Save Details":"Edit Details"}
             </button>
           </div>
 

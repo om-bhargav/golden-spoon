@@ -3,7 +3,7 @@ import { usePathname } from "next/navigation"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { Menu, X, LayoutDashboard, User, History, ClipboardList, MenuIcon, Banknote, Users,Scale, LogOut } from "lucide-react"
+import { Menu, X, LayoutDashboard, User, History, ClipboardList, MenuIcon, Banknote, Users,Scale, LogOut, Table, HandPlatter } from "lucide-react"
 import { SITE_NAME } from "@/lib/constants"
 import { Button } from "./ui/button"
 import { logOutUser } from "@/firebase/Users"
@@ -13,15 +13,16 @@ export default function Sidebar() {
   const {user} = userStore();
   const links = [
     { name: "Dashboard", href: "/u", icon: LayoutDashboard,role: ["ADMIN"] },
-    { name: "Orders", href: "/u/orders", icon: ClipboardList,role: ["ADMIN","CHEF"] },
+    { name: "Orders", href: "/u/orders", icon: ClipboardList,role: ["CHEF"] },
     { name: "Menu", href: "/u/menu", icon: MenuIcon,role: ["ADMIN","CHEF"] },
     { name: "Withdrawal Requests", href: "/u/payments", icon: Banknote,role: ["ADMIN"] },
     { name: "Users", href: "/u/users", icon: Users,role: ["ADMIN"] },
+    { name: "Tables", href: "/u/tables", icon: HandPlatter,role: ["ADMIN"] },
     { name: "Balance", href: "/u/balance", icon: Scale, role: ["CHEF"] },
-    { name: "history", href: "/u/history", icon: History, role: ["CHEF"] },
+    { name: "history", href: "/u/history", icon: History, role: ["CHEF","ADMIN"] },
     { name: "Profile", href: "/u/profile", icon: User, role:["ADMIN","CHEF"] },
   ]?.filter(({role})=>{
-    return role.includes(user?.role || "USER");
+    return role.includes(user?.role?.toUpperCase() || "USER");
   });
   const pathName = usePathname();
   const router = useRouter();

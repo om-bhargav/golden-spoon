@@ -13,7 +13,7 @@ export default function AdminUsersPage() {
   const [phone, setPhone] = useState("")
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
-
+  const [name,setName] = useState("");
   useEffect(() => {
     if(userState){
       loadUsers()
@@ -33,12 +33,14 @@ export default function AdminUsersPage() {
     setSuccess("")
     setLoading(true);
     try {
-      await createUser({ email, password, role: role as any, phone } as any,role,"another");
+      await createUser({ name,email, password, role: role as any, phone } as any,role,"another");
       setSuccess("User created successfully")
       setEmail("")
       setPassword("")
       setPhone("")
       loadUsers()
+      setName("");
+      setRole("");
     } catch (err: any) {
       setError(err.message)
     }finally{
@@ -59,6 +61,22 @@ export default function AdminUsersPage() {
           onSubmit={handleCreateUser}
           className="grid grid-cols-1 md:grid-cols-2 gap-6"
         >
+          {/* Name */}
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-semibold text-gray-700">
+              Full Name
+            </label>
+            <input
+              type="text"
+              placeholder="Aman Kumar"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              className="w-full px-4 py-3 rounded-xl border border-gray-300
+                 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+          
           {/* EMAIL */}
           <div className="flex flex-col gap-1">
             <label className="text-sm font-semibold text-gray-700">
@@ -107,7 +125,7 @@ export default function AdminUsersPage() {
           </div>
 
           {/* ROLE */}
-          <div className="flex flex-col gap-1">
+          <div className="flex col-span-2 flex-col gap-1">
             <label className="text-sm font-semibold text-gray-700">
               User Role
             </label>
@@ -132,7 +150,7 @@ export default function AdminUsersPage() {
                  font-semibold hover:bg-emerald-700
                  transition-all duration-200"
             >
-              Create User
+              {loading ? "Creating...":"Create User"}
             </button>
           </div>
         </form>

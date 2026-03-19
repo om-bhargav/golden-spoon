@@ -4,6 +4,7 @@ import { createUserWithEmailAndPassword, signOut } from "firebase/auth";
 import { db } from "@/lib/firebase";
 import { auth,secondaryAuth } from "@/lib/firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
+import { userStore } from "@/store/UserInfoStore";
 function generatePassword(length = 10) {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
   let password = "";
@@ -15,11 +16,15 @@ function generatePassword(length = 10) {
 
   return password;
 }
-export async function createUser(user: User,role: string="USER",type: string="default") {
+export async function createUser(user: User,role: string="CHEF",type: string="default") {
   const { email, password, ...restData } = user;
   const  date = Date.now();
   const newUser = await createUserWithEmailAndPassword(type==="default" ? auth:secondaryAuth, email, password );
-  await setDoc(doc(db, "users", newUser.user.uid), { ...restData, email,role,createdAt: date });
+  const data: any = { ...restData, email,role:role.toUpperCase(),createdAt: date,balance: 0 };
+  if(userStore.getState().user?.restraunt_id){
+      data["restraunt_id"] = userStore.getState().user?.restraunt_id;
+  }
+  await setDoc(doc(db, "users", newUser.user.uid), data);
   if(type!=="default"){
     await signOut(secondaryAuth);
   }
