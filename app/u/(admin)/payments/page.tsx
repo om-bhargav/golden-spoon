@@ -1,5 +1,6 @@
 "use client"
 
+import { getRequests, updatePaymentRequestStatus } from "@/firebase/withdrawal_requests"
 import { useEffect, useState } from "react"
 export default function AdminPaymentsPage() {
   const [requests, setRequests] = useState<any[]>([])
@@ -11,16 +12,17 @@ export default function AdminPaymentsPage() {
 
   const loadRequests = async () => {
     setLoading(true)
-    // const data = await getAllPaymentRequests()
-    // setRequests(data)
+    const data = await getRequests()
+    setRequests(data ?? []);
+    console.log(data);
     setLoading(false)
   }
 
   const handleUpdate = async (
     id: string,
-    status: "approved" | "rejected"
+    status: "APPROVED" | "REJECTED"
   ) => {
-    // await updatePaymentStatus(id, status)
+    await updatePaymentRequestStatus(id, status);
     loadRequests()
   }
 
@@ -54,31 +56,27 @@ export default function AdminPaymentsPage() {
                 {requests.map(req => (
                   <tr key={req.id} className="border-t">
                     <td className="p-3">
-                      <p className="font-semibold">{req.userEmail}</p>
-                      <p className="text-sm text-gray-500">Chef</p>
+                      <p className="font-semibold">{req.userDetails?.name}</p>
+                      <p className="text-sm text-gray-800">{req.userDetails?.email}</p>
+                      <p className="text-sm text-gray-500">{req.userDetails?.role}</p>
                     </td>
 
                     <td className="p-3 font-bold">₹{req.amount}</td>
 
                     <td className="p-3 text-sm">
-                      {req.paymentMethod === "upi" ? (
-                        <p>UPI: {req.upiId}</p>
-                      ) : (
-                        <>
-                          <p>{req.bankDetails?.bankName}</p>
-                          <p>Acc: {req.bankDetails?.accountNumber}</p>
-                          <p>IFSC: {req.bankDetails?.ifsc}</p>
-                        </>
-                      )}
+                          <p><span className="font-bold">UPI:</span> {req.bankDetails?.upiId || "N/A"}</p>
+                          <p><span className="font-bold">Bank:</span> {req.bankDetails?.bankName || "N/A"}</p>
+                          <p><span className="font-bold">Acc:</span> {req.bankDetails?.accountNumber || "N/A"}</p>
+                          <p><span className="font-bold">IFSC:</span> {req.bankDetails?.ifscCode || "N/A"}</p>
                     </td>
 
                     <td className="p-3">
                       <span
                         className={`px-3 py-1 rounded-full text-sm font-semibold
                           ${
-                            req.status === "pending"
+                            req.status === "PENDING"
                               ? "bg-yellow-100 text-yellow-700"
-                              : req.status === "approved"
+                              : req.status === "APPROVED"
                               ? "bg-green-100 text-green-700"
                               : "bg-red-100 text-red-700"
                           }`}
@@ -88,11 +86,11 @@ export default function AdminPaymentsPage() {
                     </td>
 
                     <td className="p-3 space-x-2">
-                      {req.status === "pending" && (
+                      {req.status === "PENDING" && (
                         <>
                           <button
                             onClick={() =>
-                              handleUpdate(req.id, "approved")
+                              handleUpdate(req.id, "APPROVED")
                             }
                             className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700"
                           >
@@ -101,7 +99,7 @@ export default function AdminPaymentsPage() {
 
                           <button
                             onClick={() =>
-                              handleUpdate(req.id, "rejected")
+                              handleUpdate(req.id, "REJECTED")
                             }
                             className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
                           >

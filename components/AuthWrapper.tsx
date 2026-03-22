@@ -6,10 +6,12 @@ import { auth } from "@/lib/firebase";
 import Loader from "./Loader";
 import { userStore } from "@/store/UserInfoStore";
 import { getUser } from "@/firebase/Users";
+import { usePathname } from "next/navigation";
 const AuthWrapper = ({ children }: React.PropsWithChildren) => {
   const [loading, setLoading] = useState(true);
   const { loginUser, resetUser } = userStore();
   const router = useRouter();
+  const pathName = usePathname();
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (currentUser) => {
       try {
@@ -19,7 +21,9 @@ const AuthWrapper = ({ children }: React.PropsWithChildren) => {
           loginUser(info as any);
         } else {
           resetUser();
-          router.push("/");
+          if(pathName.startsWith("/u")){
+            router.push("/");
+          }
         }
       } catch (error: any) {
         console.error(error.message);

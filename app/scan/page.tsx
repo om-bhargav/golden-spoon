@@ -1,141 +1,125 @@
-"use client"
+"use client";
 
-import { useEffect, useRef, useState } from "react"
-import { Html5Qrcode } from "html5-qrcode"
-import { useRouter } from "next/navigation"
+import { useEffect, useRef, useState } from "react";
+import { Html5Qrcode } from "html5-qrcode";
+import { useRouter } from "next/navigation";
 
 export default function ScanQRPage() {
-  const router = useRouter()
 
-  const qrScannerRef = useRef<Html5Qrcode | null>(null)
-  const scanningRef = useRef(false)
+  const qrRef = useRef<Html5Qrcode | null>(null);
+  const scanningRef = useRef(false);
+  const isScannerRunning = useRef(false);
 
-  const [status, setStatus] = useState<"scanning" | "error">("scanning")
-  const [message, setMessage] = useState("Point your camera at the QR code")
+  const [status, setStatus] = useState<"scanning" | "error">("scanning");
+  const [message, setMessage] = useState("Initializing camera...");
 
-  // ---------- QR VALIDATION ----------
-  const extractTableId = (text: string): string | null => {
+  // ---------- CLEAR UI ----------
+  const clearScannerUI = () => {
+    const el = document.getElementById("qr-reader");
+    if (el) el.innerHTML = "";
+  };
+
+  // ---------- SAFE STOP ----------
+  const safeStopScanner = async () => {
     try {
-      if (text.startsWith("http")) {
-        const url = new URL(text)
-        return url.pathname.split("/").pop() || null
+      if (qrRef.current) {
+        try {
+          if (qrRef.current.getState() === 2) {
+            await qrRef.current.stop();
+          }
+        } catch {}
+
+        try {
+          await qrRef.current.clear();
+        } catch {}
       }
 
-      if (text.startsWith("table:")) {
-        return text.replace("table:", "")
-      }
-
-      if (/^\d+$/.test(text)) {
-        return text
-      }
+      isScannerRunning.current = false;
     } catch {}
+  };
 
-    return null
-  }
+  // ---------- REDIRECT ----------
+  const redirectTo = async (url: string) => {
+    if (scanningRef.current) return;
+    scanningRef.current = true;
 
-  // ---------- REDIRECT SAFE ----------
-  const redirectToTable = (tableId: string) => {
-    if (scanningRef.current) return
-    scanningRef.current = true
+    await safeStopScanner();
+    // console.log(url);
+    window.location.href = url;
+  };
 
-    qrScannerRef.current?.stop().catch(() => {})
-    router.push(`/table/${tableId}`)
-  }
-
-  // ---------- CAMERA START ----------
-  const startCamera = async () => {
+  // ---------- START CAMERA ----------
+  const startScanner = async () => {
     try {
-      const scanner = new Html5Qrcode("qr-reader")
-      qrScannerRef.current = scanner
+      if (isScannerRunning.current) return;
+
+      clearScannerUI();
+
+      const scanner = new Html5Qrcode("qr-reader");
+      qrRef.current = scanner;
+
+      setMessage("Requesting camera permission...");
+
       await scanner.start(
-  { facingMode: "environment" },
-  { fps: 10, qrbox: 250 },
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
 
-  // ✅ SUCCESS CALLBACK
-  (decodedText: string) => {
-    const tableId = extractTableId(decodedText)
+        // ✅ SUCCESS
+        (decodedText) => {
+          redirectTo(decodedText);
+        },
 
-    if (!tableId) {
-      setStatus("error")
-      setMessage("Invalid QR code. Please scan restaurant QR.")
-      return
-    }
+        // ❌ IGNORE NOISE
+        () => {}
+      );
 
-    redirectToTable(tableId)
-  },
+      isScannerRunning.current = true;
 
-  // ⚠️ QR ERROR CALLBACK
-  (errorMessage: string) => {
-    // Ignore common scan noise
-
-    if (
-      errorMessage.includes("No QR code found") ||
-      errorMessage.includes("Not Found") ||
-      errorMessage.includes("parse")
-    ) {
-      return
-    }
-
-    // Optional: show gentle scanning feedback
-    setStatus("scanning")
-    setMessage("Scanning for QR code…")
-  }
-)
-
+      setStatus("scanning");
+      setMessage("Scanning QR code...");
     } catch (err) {
-      setStatus("error")
-      setMessage("Camera access denied. Please upload QR image.")
+      console.error(err);
+      setStatus("error");
+      setMessage("Camera access denied or not available.");
     }
-  }
+  };
 
-  // ---------- IMAGE UPLOAD FALLBACK ----------
-const handleImageUpload = async (
-  e: React.ChangeEvent<HTMLInputElement>
-) => {
-  const file = e.target.files?.[0]
-  if (!file) return
+  // ---------- IMAGE UPLOAD ----------
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  try {
-    const scanner =
-      qrScannerRef.current ??
-      new Html5Qrcode("qr-reader")
+    try {
+      await safeStopScanner();
+      clearScannerUI();
 
-    qrScannerRef.current = scanner
+      const scanner = new Html5Qrcode("qr-reader");
+      qrRef.current = scanner;
 
-    const decodedText = await scanner.scanFile(file, true)
+      setMessage("Reading QR from image...");
 
-    const tableId = extractTableId(decodedText)
+      const decodedText = await scanner.scanFile(file, false);
 
-    if (!tableId) {
-      setStatus("error")
-      setMessage("Invalid QR code. Please upload restaurant QR.")
-      return
+      redirectTo(decodedText);
+    } catch (err) {
+      console.error(err);
+      setStatus("error");
+      setMessage("Unable to read QR. Try clearer image.");
     }
+  };
 
-    redirectToTable(tableId)
-  } catch (err) {
-    setStatus("error")
-    setMessage(
-      "Unable to read QR from image. Try clearer image or use camera scan."
-    )
-  }
-}
-
-
-
-  // ---------- AUTO START ----------
+  // ---------- INIT ----------
   useEffect(() => {
-    startCamera()
+    startScanner();
 
     return () => {
-      qrScannerRef.current?.stop().catch(() => {})
-    }
-  }, [])
+      safeStopScanner();
+    };
+  }, []);
 
   return (
     <main className="min-h-screen bg-gray-50 flex items-center justify-center px-6">
       <div className="max-w-md w-full bg-white rounded-2xl shadow p-8 text-center">
-
         <h1 className="text-2xl font-bold mb-4">Scan Table QR</h1>
 
         <p
@@ -146,14 +130,14 @@ const handleImageUpload = async (
           {message}
         </p>
 
+        {/* QR SCANNER */}
         <div
           id="qr-reader"
-          className="w-full border rounded-xl overflow-hidden mb-6"
+          className="w-full max-h-[280px] border rounded-xl overflow-hidden mb-6"
         />
 
-        <p className="text-sm text-gray-500 mb-3">
-          Camera not working?
-        </p>
+        {/* FALLBACK */}
+        <p className="text-sm text-gray-500 mb-3">Camera not working?</p>
 
         <input
           type="file"
@@ -167,5 +151,5 @@ const handleImageUpload = async (
         />
       </div>
     </main>
-  )
+  );
 }

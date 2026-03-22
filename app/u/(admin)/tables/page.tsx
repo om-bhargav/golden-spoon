@@ -1,6 +1,8 @@
 "use client"
 
+import QRModal from "@/components/QRCodeModal"
 import { createTable, deleteTable, getTables } from "@/firebase/Tables"
+import { BASE_URL } from "@/lib/constants"
 import { useEffect, useState } from "react"
 
 export default function RestaurantTablesPage() {
@@ -138,13 +140,15 @@ export default function RestaurantTablesPage() {
                     Seats: {table.seats}
                   </p>
                 </div>
-
+                <div className="flex items-center gap-3">
                 <button
                   onClick={() => handleDeleteTable(table.id!)}
                   className="px-4 py-2 rounded-lg bg-red-500 text-white text-sm hover:bg-red-600"
-                >
+                  >
                   Remove
                 </button>
+                <QRModal link={`${BASE_URL}/menu/${table.restraunt_id}/${table.id}`}/>
+                  </div>
 
               </div>
 

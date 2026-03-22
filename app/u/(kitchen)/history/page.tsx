@@ -1,47 +1,32 @@
 "use client"
 
-import { useState } from "react"
+import { getHistoryOrders, updateChefOrderStatus } from "@/firebase/Orders"
+import { useEffect, useState } from "react"
 
-type OrderStatus = "preparing" | "ready" | "completed"
+type OrderStatus = "PREPARING" | "READY" | "COMPLETED"
 
 interface Order {
   id: string
   table: string
-  items: string[]
+  cart: string[]
   amount: number
   chefPay: number
   status: OrderStatus
 }
 
 export default function ChefOrdersPage() {
-  const [orders, setOrders] = useState<Order[]>([
-    {
-      id: "ORD-101",
-      table: "Table 4",
-      items: ["Paneer Butter Masala", "Butter Naan x2"],
-      amount: 480,
-      chefPay: 70,
-      status: "preparing",
-    },
-    {
-      id: "ORD-102",
-      table: "Table 2",
-      items: ["Veg Biryani", "Raita"],
-      amount: 320,
-      chefPay: 60,
-      status: "ready",
-    },
-    {
-      id: "ORD-103",
-      table: "Table 7",
-      items: ["Dal Makhani", "Tandoori Roti x3"],
-      amount: 410,
-      chefPay: 65,
-      status: "completed",
-    },
-  ])
+  const [orders, setOrders] = useState<Order[]>([]);
 
-  const updateStatus = (id: string, status: OrderStatus) => {
+  useEffect(()=>{
+    const fetchData = async () => {
+      const data = await getHistoryOrders();
+      setOrders(data as Order[]);
+    };
+    fetchData();
+  },[]);
+
+  const updateStatus = async (id: string, status: OrderStatus) => {
+    await updateChefOrderStatus(id,status);
     setOrders((prev) =>
       prev.map((order) =>
         order.id === id ? { ...order, status } : order
@@ -50,8 +35,8 @@ export default function ChefOrdersPage() {
   }
 
   const statusColor = (status: OrderStatus) => {
-    if (status === "preparing") return "bg-yellow-100 text-yellow-700"
-    if (status === "ready") return "bg-blue-100 text-blue-700"
+    if (status === "PREPARING") return "bg-yellow-100 text-yellow-700"
+    if (status === "READY") return "bg-blue-100 text-blue-700"
     return "bg-emerald-100 text-emerald-700"
   }
 
@@ -103,8 +88,8 @@ export default function ChefOrdersPage() {
 
                 {/* ITEMS */}
                 <ul className="text-sm text-gray-700 mb-4 list-disc list-inside space-y-1">
-                  {order.items.map((item, index) => (
-                    <li key={index}>{item}</li>
+                  {order.cart.map((item: any, index) => (
+                    <li key={index}>{item.name} x {item.qty}</li>
                   ))}
                 </ul>
 
@@ -120,25 +105,25 @@ export default function ChefOrdersPage() {
 
                 {/* ACTIONS */}
                 <div className="flex gap-3">
-                  {order.status === "preparing" && (
+                  {order.status === "PREPARING" && (
                     <button
-                      onClick={() => updateStatus(order.id, "ready")}
+                      onClick={() => updateStatus(order.id, "READY")}
                       className="flex-1 py-2 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition"
                     >
                       Mark as Ready
                     </button>
                   )}
 
-                  {order.status === "ready" && (
+                  {order.status === "READY" && (
                     <button
-                      onClick={() => updateStatus(order.id, "completed")}
+                      onClick={() => updateStatus(order.id, "COMPLETED")}
                       className="flex-1 py-2 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition"
                     >
                       Complete Order
                     </button>
                   )}
 
-                  {order.status === "completed" && (
+                  {order.status === "COMPLETED" && (
                     <div className="flex-1 text-center py-2 rounded-xl bg-gray-100 text-gray-500 text-sm font-semibold">
                       Completed
                     </div>

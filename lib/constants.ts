@@ -10,3 +10,5 @@ export function getRandomString(length: number=10) {
   }
   return result;
 }
+
+export const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;

@@ -50,6 +50,9 @@ importers:
       react-dom:
         specifier: 19.2.3
         version: 19.2.3(react@19.2.3)
+      react-qr-code:
+        specifier: ^2.0.18
+        version: 2.0.18(react@19.2.3)
       shadcn:
         specifier: ^4.0.8
         version: 4.0.8(@types/node@20.19.33)(typescript@5.9.3)
@@ -3459,6 +3462,9 @@ packages:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
     engines: {node: '>=6'}
 
+  qr.js@0.0.0:
+    resolution: {integrity: sha512-c4iYnWb+k2E+vYpRimHqSu575b1/wKl4XFeJGpFmrJQz5I88v9aY2czh7s0w36srfCM1sXgC/xpoJz5dJfq+OQ==}
+
   qs@6.15.0:
     resolution: {integrity: sha512-mAZTtNCeetKMH+pSjrb76NAM8V9a05I9aBZOHztWy/UqcJdQYNsf59vrRKWnojAT9Y+GbIvoTBC++CPHqpDBhQ==}
     engines: {node: '>=0.6'}
@@ -3494,6 +3500,11 @@ packages:
 
   react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
+
+  react-qr-code@2.0.18:
+    resolution: {integrity: sha512-v1Jqz7urLMhkO6jkgJuBYhnqvXagzceg3qJUWayuCK/c6LTIonpWbwxR1f1APGd4xrW/QcQEovNrAojbUz65Tg==}
+    peerDependencies:
+      react: '*'
 
   react-remove-scroll-bar@2.3.8:
     resolution: {integrity: sha512-9r+yi9+mgU33AKcj6IbT9oRCO78WriSj6t/cF8DWBZJ9aOGPOTEDvdUDz1FwKim7QXWwmHqtdHnRJfhAxEG46Q==}
@@ -7714,6 +7725,8 @@ snapshots:
 
   punycode@2.3.1: {}
 
+  qr.js@0.0.0: {}
+
   qs@6.15.0:
     dependencies:
       side-channel: 1.1.0
@@ -7798,6 +7811,12 @@ snapshots:
       scheduler: 0.27.0
 
   react-is@16.13.1: {}
+
+  react-qr-code@2.0.18(react@19.2.3):
+    dependencies:
+      prop-types: 15.8.1
+      qr.js: 0.0.0
+      react: 19.2.3
 
   react-remove-scroll-bar@2.3.8(@types/react@19.2.13)(react@19.2.3):
     dependencies:
